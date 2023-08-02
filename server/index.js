@@ -15,6 +15,25 @@ mongoose.connect(process.env.MONGODB_URI, {
     useUnifiedTopology: true,
 })
 
+//middleware to authenticate token 
+// Middleware to authenticate token
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.sendStatus(401); // Unauthorized
+    }
+
+    jwt.verify(token, 'secret123', (err, user) => {
+        if (err) {
+            return res.sendStatus(403); // Forbidden
+        }
+        req.user = user; // Store the user data in the request object
+        next();
+    });
+}
+
 //handler
 app.post('/api/register', async (req, res) => {
     console.log(req.body)
@@ -44,11 +63,17 @@ app.post('/api/login', async (req, res) => {
         },
             'secret123'
         )
-        return res.json({ status: 'ok', user: token})
+        return res.json({ status: 'ok', user: token })
     } else {
         return res.json({ status: 'error', user: false })
     }
 })
+
+//dashboard only visible to those who have authenticated token 
+app.get('/dashboard', authenticateToken, (req, res) => {
+    // The user is authenticated, you can access req.user for user data
+    res.json({ message: 'Welcome to the dashboard!', user: req.user });
+});
 
 app.listen(1337, () => {
     console.log('Server started on 1337')
