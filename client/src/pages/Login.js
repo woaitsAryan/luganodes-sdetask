@@ -68,32 +68,47 @@ function Login() {
     }
 
     return (
-        <div>
-            <h1>Login</h1>
-            <form onSubmit={loginUser}>
-                {/* Email/password fields */}
-                <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    type="email"
-                    placeholder="Email"
-                />
-                <br />
-                <input
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    type="password"
-                    placeholder="Password"
-                />
-                <br />
-                <input type="submit" value="Login with Email/Password" />
-            </form>
-
-            {/* Metamask login */}
-            {!metamaskLoggedIn && (
-                <button onClick={loginWithMetamask}>Login with Metamask</button>
-            )}
-            {metamaskLoggedIn && <p>Logged in with Metamask</p>}
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            <div className="bg-white rounded-lg shadow-lg p-8 w-full md:w-1/2">
+                <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
+                <form onSubmit={loginUser}>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Email</label>
+                        <input
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            type="email"
+                            placeholder="Email"
+                            className="input-field"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Password</label>
+                        <input
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            type="password"
+                            placeholder="Password"
+                            className="input-field"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="cta-button w-full py-3 text-white font-semibold rounded-md bg-red-600 hover:bg-red-700"
+                    >
+                        Login with Email/Password
+                    </button>
+                </form>
+                {!metamaskLoggedIn && (
+                    <button
+                        onClick={loginWithMetamask}
+                        className="cta-button w-full py-3 mt-4 text-white font-semibold rounded-md bg-green-600 hover:bg-green-700"
+                    >
+                        Login with Metamask
+                    </button>
+                )}
+                {metamaskLoggedIn && <p className="mt-4">Logged in with Metamask</p>}
+            </div>
         </div>
     );
 }

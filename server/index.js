@@ -1,17 +1,27 @@
 const express = require('express');
-const app = express();
 const cors = require('cors');
 const mongoose = require('mongoose');
-const User = require('./models/user.model');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { ethers } = require("ethers");
+const { generateResetToken } = require('./utility');
+const User = require('./models/user.model')
 
 require('dotenv').config();
 
+// Create Express app
+const app = express();
+
+// Middleware
 app.use(cors());
+const corsOptions = {
+    origin: 'http://localhost:3000', // Replace with your frontend domain
+    methods: 'GET,POST',
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
+// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -52,19 +62,22 @@ app.post('/api/register', async (req, res) => {
 
 // Email/Password Login
 app.post('/api/login', async (req, res) => {
-    const user = await User.findOne({
-        email: req.body.email,
-    });
+    try {
+        const user = await User.findOne({ email: req.body.email });
 
-    if (user && await bcrypt.compare(req.body.password, user.password)) {
-        const token = jwt.sign({
-            name: user.name,
-            email: user.email,
-        }, 'secret123');
+        if (user && await bcrypt.compare(req.body.password, user.password)) {
+            const token = jwt.sign({
+                email: user.email,
+            }, 'secret123');
 
-        return res.json({ status: 'ok', user: token });
-    } else {
-        return res.json({ status: 'error', user: false });
+            console.log('Sending response:', { status: 'ok', user: token }); // Log the response object
+            return res.json({ status: 'ok', user: token });
+        } else {
+            return res.json({ status: 'error', user: false });
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        return res.status(500).json({ status: 'error', user: false });
     }
 });
 
@@ -75,10 +88,9 @@ app.post('/api/login/metamask', async (req, res) => {
     try {
         let user = await User.findOne({ address: address });
 
-        // If the user doesn't exist with the Metamask address, register them
         if (!user) {
             user = await User.create({
-                name: '', // You might want to let users set their name during registration
+                name: '',
                 address: address,
                 isMetamaskUser: true,
             });
@@ -97,10 +109,23 @@ app.post('/api/login/metamask', async (req, res) => {
 });
 
 // Dashboard visible to authenticated users
-app.get('/dashboard', authenticateToken, (req, res) => {
-    res.json({ message: 'Welcome to the dashboard!', user: req.user });
+app.get('/api/dashboard', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.user.email });
+        if (user) {
+            res.json({ message: 'Welcome to the dashboard!', userInfo: user.email });
+        } else {
+            res.json({ message: 'Welcome to the dashboard!', userInfo: req.user.address });
+        }
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
-app.listen(1337, () => {
-    console.log('Server started on 1337');
+
+// Start the server
+const PORT = process.env.PORT || 1337;
+app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
 });
