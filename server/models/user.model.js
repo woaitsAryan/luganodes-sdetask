@@ -1,9 +1,11 @@
 const mongoose = require('mongoose')
 
 const User = new mongoose.Schema({
-    name: { type: String, required: true},
-    email: { type: String, required: true, unique: true},
-    password: { type: String, required: true},
+    name: { type: String }, // No longer required
+    email: { type: String, unique: true },
+    password: { type: String },
+    address: { type: String },
+    isMetamaskUser: { type: Boolean, default: false },
 }, {
     collection: 'user-data'
 })

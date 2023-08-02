@@ -69,17 +69,31 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Metamask Login
-app.post('/api/login/metamask', (req, res) => {
+app.post('/api/login/metamask', async (req, res) => {
     const { address } = req.body;
 
-    // Perform necessary checks with the Metamask address
-    // Generate a token if the address is valid
+    try {
+        let user = await User.findOne({ address: address });
 
-    const token = jwt.sign({
-        address: address,
-    }, 'secret123');
+        // If the user doesn't exist with the Metamask address, register them
+        if (!user) {
+            user = await User.create({
+                name: '', // You might want to let users set their name during registration
+                address: address,
+                isMetamaskUser: true,
+            });
+        }
 
-    return res.json({ status: 'ok', user: token });
+        const token = jwt.sign({
+            name: user.name,
+            address: user.address,
+        }, 'secret123');
+
+        return res.json({ status: 'ok', user: token });
+    } catch (err) {
+        console.error('Metamask login error:', err);
+        return res.json({ status: 'error', user: false });
+    }
 });
 
 // Dashboard visible to authenticated users

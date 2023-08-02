@@ -1,32 +1,35 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ethers } from 'ethers';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
-    // State to track Metamask login
     const [metamaskLoggedIn, setMetamaskLoggedIn] = useState(false);
 
     async function loginUser(event) {
         event.preventDefault();
-        const response = await fetch('http://localhost:1337/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email,
-                password,
-            }),
-        });
 
-        const data = await response.json();
-        if (data.user) {
-            alert('Login successful');
-            window.location.href = '/dashboard';
-        } else {
-            alert('Please check your email and password.');
+        try {
+            const response = await fetch('http://localhost:1337/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                }),
+            });
+
+            const data = await response.json();
+            if (data.user) {
+                alert('Email/password login successful');
+                window.location.href = '/dashboard';
+            } else {
+                alert('Email/password login failed');
+            }
+        } catch (error) {
+            console.error('Email/password login error:', error);
         }
     }
 
@@ -34,7 +37,7 @@ function Login() {
         if (window.ethereum) {
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
-                await provider.send("eth_requestAccounts", []); // Request permission
+                await provider.send('eth_requestAccounts', []);
                 const signer = provider.getSigner();
                 const address = await signer.getAddress();
 
@@ -83,7 +86,7 @@ function Login() {
                     placeholder="Password"
                 />
                 <br />
-                <input type="submit" value="Login" />
+                <input type="submit" value="Login with Email/Password" />
             </form>
 
             {/* Metamask login */}
