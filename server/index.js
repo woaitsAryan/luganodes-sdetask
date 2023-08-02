@@ -1,57 +1,56 @@
-const express = require('express')
-const app = express()
-const cors = require('cors')
-const mongoose = require('mongoose')
-const User = require('./models/user.model')
-const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
+const express = require('express');
+const app = express();
+const cors = require('cors');
+const mongoose = require('mongoose');
+const User = require('./models/user.model');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { ethers } = require("ethers");
 
-require('dotenv').config()
+require('dotenv').config();
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
 
-//middleware to authenticate token
 // Middleware to authenticate token
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-        return res.sendStatus(401) // Unauthorized
+        return res.sendStatus(401); // Unauthorized
     }
 
     jwt.verify(token, 'secret123', (err, user) => {
         if (err) {
             return res.sendStatus(403); // Forbidden
         }
-        req.user = user // Store the user data in the request object
-        next()
+        req.user = user; // Store the user data in the request object
+        next();
     });
 }
 
-//handler
+// Registration
 app.post('/api/register', async (req, res) => {
-    console.log(req.body);
     try {
-        const hashedPassword = await bcrypt.hash(req.body.password, 10); // Hash the password
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
         await User.create({
             name: req.body.name,
             email: req.body.email,
-            password: hashedPassword, // Store the hashed password
+            password: hashedPassword,
         });
-        res.json({ status: 'ok' })
+        res.json({ status: 'ok' });
     } catch (err) {
-        console.log(err)
-        res.json({ status: 'error', error: 'Duplicate email' })
+        res.json({ status: 'error', error: 'Duplicate email' });
     }
 });
 
+// Email/Password Login
 app.post('/api/login', async (req, res) => {
     const user = await User.findOne({
         email: req.body.email,
@@ -61,7 +60,7 @@ app.post('/api/login', async (req, res) => {
         const token = jwt.sign({
             name: user.name,
             email: user.email,
-        }, 'secret123')
+        }, 'secret123');
 
         return res.json({ status: 'ok', user: token });
     } else {
@@ -69,9 +68,22 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-//dashboard only visible to those who have authenticated token
+// Metamask Login
+app.post('/api/login/metamask', (req, res) => {
+    const { address } = req.body;
+
+    // Perform necessary checks with the Metamask address
+    // Generate a token if the address is valid
+
+    const token = jwt.sign({
+        address: address,
+    }, 'secret123');
+
+    return res.json({ status: 'ok', user: token });
+});
+
+// Dashboard visible to authenticated users
 app.get('/dashboard', authenticateToken, (req, res) => {
-    // The user is authenticated, you can access req.user for user data
     res.json({ message: 'Welcome to the dashboard!', user: req.user });
 });
 
