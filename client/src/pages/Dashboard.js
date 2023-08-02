@@ -1,35 +1,35 @@
-// import React, {useEffect} from 'react'
-// import jwt from 'jsonwebtoken'
-// import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import jwt_decode from 'jwt-decode';
 
+function Dashboard() {
+  const [userData, setUserData] = useState(null);
 
-// const Dashboard = () => {
-//     const navigate = useNavigate();
-//     //check
-//     useEffect(() => {
-//         const token = localStorage.getItem('token')
+  useEffect(() => {
+    const token = localStorage.getItem('token');
 
-//         async function populateQuote(){
-//             const data = await fetch('/api/quote', {
-//                 headers: {
-//                     'x-access-token': localStorage.getItem('token')
-//                 }
-//             })
-//         }
-//         if(token){
-//             const user = jwt.decode(token)
-//             if(! user){
-//                 localStorage.removeItem('token')
-//                 navigate('/login', {replace: true})
-//             }
-//         }
-//     }, [])
+    if (token) {
+      const decodedToken = jwt_decode(token);
+      fetch('http://localhost:1337/dashboard', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setUserData(data);
+        })
+        .catch((error) => {
+          console.error('Error fetching dashboard data:', error);
+        });
+    }
+  }, []);
 
-//     return(
-//         <div>
-//             <h1> hi</h1>
-//         </div>
-//     )
-// }
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      {userData && <p>Welcome, {userData.name}!</p>}
+    </div>
+  );
+}
 
-// export default Dashboard
+export default Dashboard;
