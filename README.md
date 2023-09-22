@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <br />
 
-  <h3 align="center">Web3-Auth</h3>
+  <h3 align="center">ForkThis</h3>
 
   <p align="center">
     <br />
